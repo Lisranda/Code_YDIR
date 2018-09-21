@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MapGridGenerator : MonoBehaviour {
+	[SerializeField] GameObject tilePrefab;
 	[SerializeField] LayerMask terrainLayer;
 
 	void Start () {
@@ -27,7 +28,8 @@ public class MapGridGenerator : MonoBehaviour {
 				continue;
 			}
 			
-			Tile tile = new Tile (toCheckLocations [0]);
+			GameObject go = Instantiate (tilePrefab, toCheckLocations [0] - new Vector3 (0f, 24.9f, 0f), Quaternion.identity, this.transform);
+			MapGrid.tileList.Add (go);
 						
 			if (!checkedLocations.Contains (toCheckLocations [0] + Vector3.forward) && !toCheckLocations.Contains (toCheckLocations [0] + Vector3.forward))
 				toCheckLocations.Add (toCheckLocations [0] + Vector3.forward);
@@ -40,6 +42,19 @@ public class MapGridGenerator : MonoBehaviour {
 			
 			checkedLocations.Add (toCheckLocations [0]);
 			toCheckLocations.Remove (toCheckLocations [0]);
+		}
+
+		foreach (GameObject tileGo in MapGrid.tileList) {
+			float baseX = tileGo.transform.position.x;
+			float baseZ = tileGo.transform.position.z;
+
+			foreach (GameObject possibleNeighbor in MapGrid.tileList) {
+				float testX = possibleNeighbor.transform.position.x;
+				float testZ = possibleNeighbor.transform.position.z;
+
+				if (baseX + 1f == testX && baseZ == testZ) {
+				}
+			}
 		}
 	}
 }
