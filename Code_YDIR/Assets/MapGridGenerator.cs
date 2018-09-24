@@ -8,7 +8,7 @@ public class MapGridGenerator : MonoBehaviour {
 
 	void Start () {
 		CreateGrid ();
-		
+		SetGridNeighbors ();		
 	}
 
 	void Update () {
@@ -16,19 +16,20 @@ public class MapGridGenerator : MonoBehaviour {
 	}
 
 	void CreateGrid () {
-		Vector3 startLocation = new Vector3 (0f, 25f, 0f);
+		Vector3 startLocation = new Vector3 (0f, 0f, 0f);
 		List<Vector3> toCheckLocations = new List<Vector3> ();
 		List<Vector3> checkedLocations = new List<Vector3> ();
 		toCheckLocations.Add (startLocation);
 
 		while (toCheckLocations.Count > 0) {
-			if (!Physics.Raycast (toCheckLocations [0], Vector3.down, 50f, terrainLayer)) {
+			if (!Physics.Raycast (toCheckLocations [0] + new Vector3 (0f, 10f, 0f), Vector3.down, 50f, terrainLayer)) {
 				checkedLocations.Add (toCheckLocations [0]);
 				toCheckLocations.Remove (toCheckLocations [0]);
 				continue;
 			}
 			
-			GameObject go = Instantiate (tilePrefab, toCheckLocations [0] - new Vector3 (0f, 24.9f, 0f), Quaternion.identity, this.transform);
+			GameObject go = Instantiate (tilePrefab, toCheckLocations [0] - new Vector3 (0f, 0f, 0f), Quaternion.identity, this.transform);
+			go.name = "Tile: " + toCheckLocations [0];
 			MapGrid.tileList.Add (go);
 						
 			if (!checkedLocations.Contains (toCheckLocations [0] + Vector3.forward) && !toCheckLocations.Contains (toCheckLocations [0] + Vector3.forward))
@@ -43,7 +44,9 @@ public class MapGridGenerator : MonoBehaviour {
 			checkedLocations.Add (toCheckLocations [0]);
 			toCheckLocations.Remove (toCheckLocations [0]);
 		}
+	}
 
+	void SetGridNeighbors () {
 		foreach (GameObject tileGo in MapGrid.tileList) {
 			float baseX = tileGo.transform.position.x;
 			float baseZ = tileGo.transform.position.z;
@@ -52,7 +55,17 @@ public class MapGridGenerator : MonoBehaviour {
 				float testX = possibleNeighbor.transform.position.x;
 				float testZ = possibleNeighbor.transform.position.z;
 
+				if (baseX == testX && baseZ + 1f == testZ) {
+					tileGo.GetComponent<Tile> ().SetNeighbor (0, possibleNeighbor);
+				}
 				if (baseX + 1f == testX && baseZ == testZ) {
+					tileGo.GetComponent<Tile> ().SetNeighbor (1, possibleNeighbor);
+				}
+				if (baseX == testX && baseZ - 1f == testZ) {
+					tileGo.GetComponent<Tile> ().SetNeighbor (2, possibleNeighbor);
+				}
+				if (baseX - 1f == testX && baseZ == testZ) {
+					tileGo.GetComponent<Tile> ().SetNeighbor (3, possibleNeighbor);
 				}
 			}
 		}
