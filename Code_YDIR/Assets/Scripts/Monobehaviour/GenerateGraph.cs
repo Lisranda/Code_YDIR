@@ -79,15 +79,39 @@ public class GenerateGraph : MonoBehaviour {
 			if (!Physics.Raycast (testNode + yOffset, Vector3.down, out hit, 10f, terrainLayer))
 				continue;
 
+			if (!TestBounds (testNode + yOffset))
+				continue;
+
 			Node node = new Node (new Vector3 (testNode.x, hit.point.y, testNode.z));
 			NodeList.nodeList.Add (node);
 		}
 	}
 
+	bool TestBounds (Vector3 testNode) {
+		Vector3[] boundsTests = new Vector3[4];
+
+		boundsTests [0] = testNode + new Vector3 (0.5f, 0f, 0.5f);
+		boundsTests [1] = testNode + new Vector3 (-0.5f, 0f, 0.5f);
+		boundsTests [2] = testNode + new Vector3 (-0.5f, 0f, -0.5f);
+		boundsTests [3] = testNode + new Vector3 (0.5f, 0f, -0.5f);
+
+		foreach (Vector3 bound in boundsTests) {
+			if (!Physics.Raycast (bound, Vector3.down, 10f, terrainLayer))
+				return false;
+		}
+		return true;
+	}
+
 	void DebugDrawOverlay () {		
 		foreach (Node n in NodeList.nodeList) {
+			Vector3 yOffset = new Vector3 (0f, 1f, 0f);
+			RaycastHit hit;
+			if (!Physics.Raycast (n.GetWorldPosition () + yOffset, Vector3.down, out hit, 10f, terrainLayer))
+				continue;
+
 			Vector3 gyOffset = new Vector3 (0f, 0.01f, 0f);
 			GameObject tile = Instantiate (tilePrefab, n.GetWorldPosition () + gyOffset, Quaternion.identity);
+			tile.transform.rotation = Quaternion.FromToRotation (tile.transform.up, hit.normal) * tile.transform.rotation;
 			tile.name = n.GetWorldPosition ().ToString () + " " + n.GetConnections ().Length;
 		}
 	}
