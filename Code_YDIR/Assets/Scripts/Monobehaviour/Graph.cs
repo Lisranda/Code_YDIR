@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GenerateGraph : MonoBehaviour {
+public class Graph : MonoBehaviour {
 	[SerializeField] LayerMask terrainLayer;
 	[SerializeField] GameObject tilePrefab;
 	GameObject terrainContainer;
 	[SerializeField] bool drawOverlay = false;
+	List<Node> nodeList = new List<Node>();
 
 	void Awake () {
 		Initialize ();
@@ -26,6 +27,16 @@ public class GenerateGraph : MonoBehaviour {
 
 		if (drawOverlay)
 			DebugDrawOverlay ();
+	}
+
+	public Node GetNodeFromWorldSpace (Vector3 worldPosition) {
+		foreach (Node n in nodeList) {
+			if ((worldPosition.x >= n.GetWorldPosition ().x - 0.5f && worldPosition.x <= n.GetWorldPosition ().x + 0.5f)
+			    && (worldPosition.z >= n.GetWorldPosition ().z - 0.5f && worldPosition.z <= n.GetWorldPosition ().z + 0.5f)
+			    && (worldPosition.y >= n.GetWorldPosition ().y - 0.5f && worldPosition.y <= n.GetWorldPosition ().y + 0.5f))
+				return n;
+		}
+		return null;
 	}
 
 	GameObject[] GetTerrainMembers () {
@@ -83,7 +94,7 @@ public class GenerateGraph : MonoBehaviour {
 				continue;
 
 			Node node = new Node (new Vector3 (testNode.x, hit.point.y, testNode.z));
-			NodeList.nodeList.Add (node);
+			nodeList.Add (node);
 		}
 	}
 
@@ -103,7 +114,7 @@ public class GenerateGraph : MonoBehaviour {
 	}
 
 	void DebugDrawOverlay () {		
-		foreach (Node n in NodeList.nodeList) {
+		foreach (Node n in nodeList) {
 			Vector3 yOffset = new Vector3 (0f, 1f, 0f);
 			RaycastHit hit;
 			if (!Physics.Raycast (n.GetWorldPosition () + yOffset, Vector3.down, out hit, 10f, terrainLayer))
@@ -115,9 +126,9 @@ public class GenerateGraph : MonoBehaviour {
 			tile.name = n.GetWorldPosition ().ToString () + " " + n.GetConnections ().Length;
 		}
 	}
-
+		
 	void ConnectGraph () {
-		foreach (Node n in NodeList.nodeList) {
+		foreach (Node n in nodeList) {
 			GenerateConnections (n);
 		}
 	}
@@ -125,7 +136,7 @@ public class GenerateGraph : MonoBehaviour {
 	void GenerateConnections (Node node) {
 		Vector3 nodePosition = node.GetWorldPosition ();
 
-		foreach (Node n in NodeList.nodeList) {
+		foreach (Node n in nodeList) {
 			Vector3 nPosition = n.GetWorldPosition ();
 			float yDiff = Mathf.Abs (nodePosition.y - nPosition.y);
 			if (yDiff > 0.5f)
