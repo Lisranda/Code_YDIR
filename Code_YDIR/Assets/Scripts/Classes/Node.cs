@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Node {
+	GameObject originatingGameObject;
 	Vector3 worldPosition;
 	List<Node> connections = new List<Node>();
 	bool isWalkable;
 
-	public Node (Vector3 worldPosition) {
-		this.worldPosition = worldPosition;
-		this.isWalkable = true;
-	}
-
-	public Node (Vector3 worldPosition, bool isWalkable) {
+	public Node (Vector3 worldPosition, GameObject originatingGameObject, bool isWalkable = true) {
+		this.originatingGameObject = originatingGameObject;
 		this.worldPosition = worldPosition;
 		this.isWalkable = isWalkable;
 	}

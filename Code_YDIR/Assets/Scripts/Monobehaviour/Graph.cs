@@ -10,19 +10,15 @@ public class Graph : MonoBehaviour {
 	List<Node> nodeList = new List<Node>();
 
 	void Awake () {
-		Initialize ();
-	}
-
-	void Start () {
-		Generate ();
-	}
-
-	void Initialize () {
 		terrainContainer = transform.parent.Find ("Terrain").gameObject;
 	}
 
-	void Generate () {
-		TestNodes (GetPossibleNodes (GetTerrainMembers ()));
+	void Start () {
+		GenerateGraph ();
+	}
+
+	void GenerateGraph () {
+		GenerateNodes (GetTerrainMembers ());
 		ConnectGraph ();
 
 		if (drawOverlay)
@@ -52,9 +48,7 @@ public class Graph : MonoBehaviour {
 		return membersGO.ToArray ();
 	}
 
-	Vector3[] GetPossibleNodes (GameObject[] terrainMembers) {
-		List<Vector3> possibleNodes = new List<Vector3> ();
-
+	void GenerateNodes (GameObject[] terrainMembers) {
 		foreach (GameObject go in terrainMembers) {
 			MeshRenderer render = go.GetComponent<MeshRenderer> ();
 
@@ -74,31 +68,26 @@ public class Graph : MonoBehaviour {
 					float nodeX = posX - (sizeX * 0.5f) + (float)x + 0.5f;
 					float nodeY = posY + (sizeY * 0.5f);
 					float nodeZ = posZ - (sizeZ * 0.5f) + (float)z + 0.5f;
+					Vector3 testNode = new Vector3 (nodeX, nodeY, nodeZ);
 
-					possibleNodes.Add (new Vector3 (nodeX, nodeY, nodeZ));
+					RaycastHit hit;
+					if (!Physics.Raycast (testNode + Vector3.up, Vector3.down, out hit, 10f, terrainLayer))
+						continue;
+
+					if (hit.transform.gameObject != go)
+						continue;
+
+					if (!TestBounds (testNode + Vector3.up, go))
+						continue;
+
+					Node node = new Node (new Vector3 (testNode.x, hit.point.y, testNode.z), go);
+					nodeList.Add (node);
 				}
 			}
 		}
-		return possibleNodes.ToArray ();
 	}
 
-	void TestNodes (Vector3[] possibleNodes) {
-		foreach (Vector3 testNode in possibleNodes) {
-			Vector3 yOffset = new Vector3 (0f, 1f, 0f);
-
-			RaycastHit hit;
-			if (!Physics.Raycast (testNode + yOffset, Vector3.down, out hit, 10f, terrainLayer))
-				continue;
-
-			if (!TestBounds (testNode + yOffset))
-				continue;
-
-			Node node = new Node (new Vector3 (testNode.x, hit.point.y, testNode.z));
-			nodeList.Add (node);
-		}
-	}
-
-	bool TestBounds (Vector3 testNode) {
+	bool TestBounds (Vector3 testNode, GameObject testGameObject) {
 		Vector3[] boundsTests = new Vector3[4];
 
 		boundsTests [0] = testNode + new Vector3 (0.5f, 0f, 0.5f);
@@ -107,17 +96,19 @@ public class Graph : MonoBehaviour {
 		boundsTests [3] = testNode + new Vector3 (0.5f, 0f, -0.5f);
 
 		foreach (Vector3 bound in boundsTests) {
-			if (!Physics.Raycast (bound, Vector3.down, 10f, terrainLayer))
+			RaycastHit hit;
+			if (!Physics.Raycast (bound, Vector3.down, out hit, 10f, terrainLayer))
 				return false;
+//			if (hit.transform.gameObject != testGameObject)
+//				return false;
 		}
 		return true;
 	}
 
 	void DebugDrawOverlay () {		
 		foreach (Node n in nodeList) {
-			Vector3 yOffset = new Vector3 (0f, 1f, 0f);
 			RaycastHit hit;
-			if (!Physics.Raycast (n.GetWorldPosition () + yOffset, Vector3.down, out hit, 10f, terrainLayer))
+			if (!Physics.Raycast (n.GetWorldPosition () + Vector3.up, Vector3.down, out hit, 10f, terrainLayer))
 				continue;
 
 			Vector3 gyOffset = new Vector3 (0f, 0.01f, 0f);
@@ -142,21 +133,21 @@ public class Graph : MonoBehaviour {
 			if (yDiff > 0.5f)
 				continue;
 
-			if (nPosition.x == nodePosition.x && nPosition.z == nodePosition.z + 1)
+			if (nPosition.x == nodePosition.x && nPosition.z == nodePosition.z + 1f)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x + 1 && nPosition.z == nodePosition.z + 1)
+			if (nPosition.x == nodePosition.x + 1f && nPosition.z == nodePosition.z + 1f)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x + 1 && nPosition.z == nodePosition.z)
+			if (nPosition.x == nodePosition.x + 1f && nPosition.z == nodePosition.z)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x + 1 && nPosition.z == nodePosition.z - 1)
+			if (nPosition.x == nodePosition.x + 1f && nPosition.z == nodePosition.z - 1f)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x && nPosition.z == nodePosition.z - 1)
+			if (nPosition.x == nodePosition.x && nPosition.z == nodePosition.z - 1f)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x - 1 && nPosition.z == nodePosition.z - 1)
+			if (nPosition.x == nodePosition.x - 1f && nPosition.z == nodePosition.z - 1f)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x - 1 && nPosition.z == nodePosition.z)
+			if (nPosition.x == nodePosition.x - 1f && nPosition.z == nodePosition.z)
 				node.AddConnection (n);
-			if (nPosition.x == nodePosition.x - 1 && nPosition.z == nodePosition.z + 1)
+			if (nPosition.x == nodePosition.x - 1f && nPosition.z == nodePosition.z + 1f)
 				node.AddConnection (n);
 		}
 	}
