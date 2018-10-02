@@ -21,7 +21,7 @@ namespace Pathfinding {
 					if (closedSet.Contains (n) || !n.IsWalkable ())
 						continue;
 
-					int newCost = current.gCost + GetDistance (current, n);
+					float newCost = current.gCost + GetDistance (current, n);
 					int newHops = current.gHops + 1;
 					bool inOpen = openSet.Contains (n);
 					if (newCost < n.gCost || !inOpen) {
@@ -36,10 +36,10 @@ namespace Pathfinding {
 			}
 		}
 
-		static int GetDistance (Node a, Node b) {
+		static float GetDistance (Node a, Node b) {
 			Vector3 aP = new Vector3 (a.GetWorldPosition ().x, 0f, a.GetWorldPosition ().z);
 			Vector3 bP = new Vector3 (b.GetWorldPosition ().x, 0f, b.GetWorldPosition ().z);
-			return Mathf.CeilToInt (Mathf.Abs (Vector3.Distance (aP, bP)));
+			return Mathf.Abs (Vector3.Distance (aP, bP));
 		}
 
 		public static List<Node> GetNodesInRange (Node start, int range) {

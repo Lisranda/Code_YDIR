@@ -7,18 +7,18 @@ public class Node : IComparable {
 	Vector3 worldPosition;
 	List<Node> connections = new List<Node>();
 	bool isWalkable;
-	public int hCost;
-	public int gCost;
+	public float hCost;
+	public float gCost;
 	public int gHops;
 	public Node gParent;
 
-	public int fCost { get { return gCost + hCost; } }
+	public float fCost { get { return gCost + hCost; } }
 
 	public int CompareTo (System.Object obj) {
 		Node node = (Node)obj;
 		if (fCost == node.fCost)
-			return hCost - node.hCost;
-		return fCost - node.fCost;
+			return (int)(hCost - node.hCost);
+		return (int)(fCost - node.fCost);
 	}
 
 	public Node (Vector3 worldPosition, bool isWalkable = true) {
@@ -45,6 +45,7 @@ public class Node : IComparable {
 	}
 
 	public void CheckWalkable () {
+		isWalkable = true;
 		Vector3 gyOffset = new Vector3 (0f, 0.5f, 0f);
 //		if (Physics.Raycast (worldPosition, Vector3.up, 1f))
 //			isWalkable = false;

@@ -16,6 +16,10 @@ public class TurnManager : MonoBehaviour {
 		if (Input.GetMouseButtonDown (0)) {
 			Click ();
 		}
+
+		if (Input.GetMouseButtonDown (1)) {
+			RightClick ();
+		}
 	}
 
 	void LateUpdate () {
@@ -43,6 +47,31 @@ public class TurnManager : MonoBehaviour {
 		SelectPawn (hit.transform.GetComponent<Pawn> ());
 	}
 
+	void RightClick () {
+		if (activePawn == null)
+			return;
+		RaycastHit hit;
+		Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
+		if (!Physics.Raycast (ray, out hit))
+			return;
+		if (hit.transform.GetComponent<TileOverlay> () == null)
+			return;
+		Node n = graph.GetNodeFromWorldSpace (hit.transform.position);
+		MovePawn (activePawn, n);
+		if (n.gCost <= activePawn.movementRange)
+			activePawn.numActions--;
+		else
+			activePawn.numActions -= 2;
+		SelectPawn (activePawn);
+	}
+
+	void MovePawn (Pawn pawn, Node node) {
+		pawn.transform.position = node.GetWorldPosition ();
+		foreach (Node n in Graph.nodeList) {
+			n.CheckWalkable ();
+		}
+	}
+
 	void DrawPath (Node start, Node end) {
 		List<Node> path = Pathfinding.Dijkstra.GetPath (start, end);
 		foreach (Node n in path) {
@@ -65,10 +94,27 @@ public class TurnManager : MonoBehaviour {
 		}
 	}
 
+	void HighlightNodes (Pawn p, List<Node> inRange) {		
+		foreach (Node n in inRange) {
+			Color color;
+			if (p.numActions == 2) {
+				color = n.gCost <= p.movementRange ? new Color (0.2f, 0.5f, 0.8f, 0.25f) : new Color (0.2f, 0.8f, 0.5f, 0.25f);
+			} else {
+				color = new Color (0.2f, 0.8f, 0.5f, 0.25f);
+			}
+			overlays.Add (graph.DrawOverlay (n, color));
+		}
+	}
+
 	void EndTurn () {
 		foreach (Pawn p in pawns) {
 			p.numActions = 2;
 		}
+		foreach (GameObject go in overlays) {
+			Destroy (go);
+		}
+		overlays.Clear ();
+		SelectPawn (activePawn);
 		turnCounter++;
 		Debug.Log ("Turn: " + turnCounter);
 	}
