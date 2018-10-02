@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class Graph : MonoBehaviour {
 	[SerializeField] LayerMask terrainLayer;
+	public LayerMask tileGrid;
 	[SerializeField] GameObject tilePrefab;
 	GameObject terrainContainer;
 	[SerializeField] bool drawOverlay = false;
-	List<Node> nodeList = new List<Node>();
+	public static List<Node> nodeList = new List<Node>();
 
 	void Awake () {
 		terrainContainer = transform.parent.Find ("Terrain").gameObject;
@@ -80,7 +81,8 @@ public class Graph : MonoBehaviour {
 					if (!TestBounds (testNode + Vector3.up, go))
 						continue;
 
-					Node node = new Node (new Vector3 (testNode.x, hit.point.y, testNode.z), go);
+					Node node = new Node (new Vector3 (testNode.x, hit.point.y, testNode.z));
+					node.CheckWalkable ();
 					nodeList.Add (node);
 				}
 			}
@@ -105,7 +107,14 @@ public class Graph : MonoBehaviour {
 		return true;
 	}
 
-	void DebugDrawOverlay () {		
+	public Transform seeker;
+	public Transform target;
+
+	void TestPath () {
+		
+	}
+
+	void DebugDrawOverlay () {
 		foreach (Node n in nodeList) {
 			RaycastHit hit;
 			if (!Physics.Raycast (n.GetWorldPosition () + Vector3.up, Vector3.down, out hit, 10f, terrainLayer))
@@ -115,12 +124,47 @@ public class Graph : MonoBehaviour {
 			GameObject tile = Instantiate (tilePrefab, n.GetWorldPosition () + gyOffset, Quaternion.identity);
 			tile.transform.rotation = Quaternion.FromToRotation (tile.transform.up, hit.normal) * tile.transform.rotation;
 			tile.name = n.GetWorldPosition ().ToString () + " " + n.GetConnections ().Length;
+
+			tile.GetComponent<MeshRenderer> ().material.color = new Color (0.8f, 0.5f, 0.5f, 0.25f);
+			if (n.IsWalkable ())
+				tile.GetComponent<MeshRenderer> ().material.color = new Color (0.2f, 0.5f, 0.8f, 0.25f);
 		}
 	}
+
+	public GameObject DrawOverlay (Node node, Color color) {
+		RaycastHit hit;
+		if (!Physics.Raycast (node.GetWorldPosition () + Vector3.up, Vector3.down, out hit, 10f, terrainLayer))
+			return null;
+		
+		Vector3 gyOffset = new Vector3 (0f, 0.01f, 0f);
+		GameObject tile = Instantiate (tilePrefab, node.GetWorldPosition () + gyOffset, Quaternion.identity);
+		tile.transform.rotation = Quaternion.FromToRotation (tile.transform.up, hit.normal) * tile.transform.rotation;
+		tile.name = node.GetWorldPosition ().ToString () + " " + node.GetConnections ().Length;
+		
+		tile.GetComponent<TileOverlay> ().SetOriginalColor (new Color (0.8f, 0.5f, 0.5f, 0.25f));
+		if (node.IsWalkable ())
+			tile.GetComponent<TileOverlay> ().SetOriginalColor (color);
+		return tile;
+	}
+
+//	void OnDrawGizmos () {
+//		if (!drawOverlay) {
+//			foreach (Node n in nodeList) {
+//				Vector3 gyOffset = new Vector3 (0f, 0.01f, 0f);
+//				
+//				if (n.IsWalkable ())
+//					Gizmos.color = new Color (0.2f, 0.5f, 0.8f, 0.5f);
+//				else
+//					Gizmos.color = new Color (0.8f, 0.5f, 0.5f, 0.5f);
+//				
+//				Gizmos.DrawCube (n.GetWorldPosition () + gyOffset, new Vector3 (0.9f, 0f, 0.8f));
+//			}
+//		}
+//	}
 		
 	void ConnectGraph () {
 		foreach (Node n in nodeList) {
-			GenerateConnections (n);
+			n.GenerateConnections ();
 		}
 	}
 
