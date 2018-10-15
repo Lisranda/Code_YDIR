@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Node : IComparable {
+	Graph graph;
 	Vector3 worldPosition;
 	List<Node> connections = new List<Node>();
 	bool isWalkable;
@@ -21,7 +22,8 @@ public class Node : IComparable {
 		return (int)(fCost - node.fCost);
 	}
 
-	public Node (Vector3 worldPosition, bool isWalkable = true) {
+	public Node (Graph graph, Vector3 worldPosition, bool isWalkable = true) {
+		this.graph = graph;
 		this.worldPosition = worldPosition;
 		this.isWalkable = isWalkable;
 	}
@@ -30,18 +32,12 @@ public class Node : IComparable {
 		return worldPosition;
 	}
 
-	public void AddConnection (Node connectedNode) {
-		connections.Add (connectedNode);
-	}
-
 	public Node[] GetConnections () {
 		return connections.ToArray ();
 	}
 
 	public bool IsWalkable () {
-		if (!isWalkable)
-			return false;
-		return true;
+		return isWalkable;
 	}
 
 	public void CheckWalkable () {
@@ -56,77 +52,31 @@ public class Node : IComparable {
 
 	public void GenerateConnections () {
 		connections.Clear ();
-		foreach (Node n in Graph.nodeList) {
+		foreach (Node n in graph.nodeList) {
 			Vector3 nPosition = n.GetWorldPosition ();
 			Vector3 direction = nPosition - worldPosition;
 			float yDiff = Mathf.Abs (worldPosition.y - nPosition.y);
 			if (yDiff > 0.5f)
 				continue;
 
-			if (nPosition.x == worldPosition.x && nPosition.z == worldPosition.z + 1f) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
+			if (!((nPosition.x == worldPosition.x && nPosition.z == worldPosition.z + 1f) ||
+				(nPosition.x == worldPosition.x + 1f && nPosition.z == worldPosition.z + 1f) ||
+				(nPosition.x == worldPosition.x + 1f && nPosition.z == worldPosition.z) ||
+				(nPosition.x == worldPosition.x + 1f && nPosition.z == worldPosition.z - 1f) ||
+				(nPosition.x == worldPosition.x && nPosition.z == worldPosition.z - 1f) ||
+				(nPosition.x == worldPosition.x - 1f && nPosition.z == worldPosition.z - 1f) ||
+				(nPosition.x == worldPosition.x - 1f && nPosition.z == worldPosition.z) ||
+				(nPosition.x == worldPosition.x - 1f && nPosition.z == worldPosition.z + 1f))) {
+				continue;
 			}
-			if (nPosition.x == worldPosition.x + 1f && nPosition.z == worldPosition.z + 1f) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
+
+			RaycastHit hit;
+			if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
+				if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
+					continue;
 			}
-			if (nPosition.x == worldPosition.x + 1f && nPosition.z == worldPosition.z) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
-			}
-			if (nPosition.x == worldPosition.x + 1f && nPosition.z == worldPosition.z - 1f) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
-			}
-			if (nPosition.x == worldPosition.x && nPosition.z == worldPosition.z - 1f) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
-			}
-			if (nPosition.x == worldPosition.x - 1f && nPosition.z == worldPosition.z - 1f) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
-			}
-			if (nPosition.x == worldPosition.x - 1f && nPosition.z == worldPosition.z) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
-			}
-			if (nPosition.x == worldPosition.x - 1f && nPosition.z == worldPosition.z + 1f) {
-				RaycastHit hit;
-				if (Physics.Raycast (worldPosition, direction, out hit, 1f)) {
-					if (hit.transform.gameObject.GetComponent<Obstacle> () != null)
-						continue;
-				}
-				AddConnection (n);
-			}
+
+			connections.Add (n);
 		}
 	}
 }

@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class TurnManager : MonoBehaviour {
-	public Graph graph;
+	Graph graph;
+	Overlay overlay;
 	public int turnCounter = 1;
 	public List<Pawn> pawns = new List<Pawn> ();
 	public Pawn activePawn;
 	List<GameObject> overlays = new List<GameObject> ();
+
+	void Awake () {
+		graph = FindObjectOfType<Graph> ();
+		overlay = FindObjectOfType<Overlay> ();
+	}
 
 	void Update () {
 		if (Input.GetKeyDown ("space"))
@@ -67,7 +73,7 @@ public class TurnManager : MonoBehaviour {
 
 	void MovePawn (Pawn pawn, Node node) {
 		pawn.transform.position = node.GetWorldPosition ();
-		foreach (Node n in Graph.nodeList) {
+		foreach (Node n in graph.nodeList) {
 			n.CheckWalkable ();
 		}
 	}
@@ -87,11 +93,8 @@ public class TurnManager : MonoBehaviour {
 
 		activePawn = p;
 		Camera.main.transform.position = new Vector3 (p.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z);
-		List<Node> inRange = Pathfinding.Dijkstra.GetNodesInRange (graph.GetNodeFromWorldSpace (p.transform.position), p.movementRange * p.numActions);
-		foreach (Node n in inRange) {
-			Color color = n.gCost <= p.movementRange ? new Color (0.2f, 0.5f, 0.8f, 0.25f) : new Color (0.2f, 0.8f, 0.5f, 0.25f);
-			overlays.Add (graph.DrawOverlay (n, color));
-		}
+		List<Node> inRange = Pathfinding.Dijkstra.GetNodesInRange (graph, graph.GetNodeFromWorldSpace (p.transform.position), p.movementRange * p.numActions);
+		HighlightNodes (p, inRange);
 	}
 
 	void HighlightNodes (Pawn p, List<Node> inRange) {		
@@ -102,7 +105,7 @@ public class TurnManager : MonoBehaviour {
 			} else {
 				color = new Color (0.2f, 0.8f, 0.5f, 0.25f);
 			}
-			overlays.Add (graph.DrawOverlay (n, color));
+			overlays.Add (overlay.DrawOverlay (n, color));
 		}
 	}
 

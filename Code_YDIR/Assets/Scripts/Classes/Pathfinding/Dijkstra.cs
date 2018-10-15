@@ -42,11 +42,11 @@ namespace Pathfinding {
 			return Mathf.Abs (Vector3.Distance (aP, bP));
 		}
 
-		public static List<Node> GetNodesInRange (Node start, int range) {
-			Reset ();
+		public static List<Node> GetNodesInRange (Graph graph, Node start, int range) {
+			Reset (graph);
 			List<Node> inRange = new List<Node> ();
 			Explore (start, range);
-			foreach (Node n in Graph.nodeList) {
+			foreach (Node n in graph.nodeList) {
 				if (n.gCost > 0 && n.gCost <= range)
 					inRange.Add (n);
 			}
@@ -65,8 +65,8 @@ namespace Pathfinding {
 			return path;
 		}
 
-		static void Reset () {
-			foreach (Node n in Graph.nodeList) {
+		static void Reset (Graph graph) {
+			foreach (Node n in graph.nodeList) {
 				n.gCost = 0;
 				n.gHops = 0;
 				n.hCost = 0;
